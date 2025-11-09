@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  portfolio:
+    build: .
+    container_name: fks_portfolio
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./notebooks:/app/notebooks
+    environment:
+      - LOG_LEVEL=INFO
+      - DATA_DIR=/app/data
+    command: python src/cli.py --help
+
