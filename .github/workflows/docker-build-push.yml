@@ -41,9 +41,7 @@ jobs:
       - name: Run tests
         run: |
           pip install pytest pytest-cov || true
-          if [ -d "tests" ] && [ "$(ls -A tests)" ]
-conftest.py
-test_health.py" ]; then
+          if [ -d "tests" ] && [ "$(ls -A tests)" ]; then
             pytest tests/ -v --cov=src --cov-report=xml || true
           fi
 
