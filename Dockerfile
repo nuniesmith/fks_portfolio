@@ -1,26 +1,74 @@
-# Portfolio Platform Dockerfile
-FROM python:3.11-slim
+# Multi-stage build for Portfolio Platform Python service
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     make \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip, setuptools, and wheel (better caching with BuildKit)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --upgrade pip setuptools wheel
 
-# Copy application code
-COPY src/ ./src/
-COPY *.md ./
+# Copy dependency files (for better layer caching)
+COPY requirements.txt ./
 
-# Set Python path
-ENV PYTHONPATH=/app
+# Install Python dependencies with BuildKit cache mount
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --user --no-warn-script-location -r requirements.txt
 
-# Default command
-CMD ["python", "src/cli.py", "--help"]
+# Runtime stage
+FROM python:3.11-slim
 
+# Environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app:/app/src \
+    PATH=/home/appuser/.local/bin:$PATH \
+    SERVICE_NAME=fks_portfolio \
+    SERVICE_PORT=8012 \
+    PORT=8012
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user first (before copying files)
+RUN useradd -u 1000 -m -s /bin/bash appuser
+
+# Copy Python packages from builder with correct ownership
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+
+# Copy application source with correct ownership
+COPY --chown=appuser:appuser src/ ./src/
+
+# Copy documentation files (if needed)
+COPY --chown=appuser:appuser *.md ./
+COPY --chown=appuser:appuser entrypoint.sh ./
+
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
+# Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import os,urllib.request,sys;port=os.getenv('SERVICE_PORT','8012');u=f'http://localhost:{port}/health';\
+import urllib.error;\
+try: urllib.request.urlopen(u,timeout=3);\
+except Exception: sys.exit(1)" || exit 1
+
+# Expose the service port
+EXPOSE 8012
+
+# Use entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]
