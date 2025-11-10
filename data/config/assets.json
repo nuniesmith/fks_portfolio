@@ -1,0 +1,104 @@
+{
+  "BTC": {
+    "symbol": "BTC",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko",
+      "coinmarketcap"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 1
+  },
+  "ETH": {
+    "symbol": "ETH",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko",
+      "coinmarketcap"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 1
+  },
+  "SPY": {
+    "symbol": "SPY",
+    "enabled": true,
+    "adapters": [
+      "yahoofinance",
+      "polygon",
+      "alphavantage"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 1
+  },
+  "SOL": {
+    "symbol": "SOL",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 2
+  },
+  "BNB": {
+    "symbol": "BNB",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 2
+  },
+  "QQQ": {
+    "symbol": "QQQ",
+    "enabled": true,
+    "adapters": [
+      "yahoofinance",
+      "polygon"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 2
+  },
+  "ADA": {
+    "symbol": "ADA",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 3
+  },
+  "AVAX": {
+    "symbol": "AVAX",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 3
+  },
+  "MATIC": {
+    "symbol": "MATIC",
+    "enabled": true,
+    "adapters": [
+      "binance",
+      "coingecko"
+    ],
+    "collection_interval": "daily",
+    "last_collected": null,
+    "priority": 3
+  }
+}

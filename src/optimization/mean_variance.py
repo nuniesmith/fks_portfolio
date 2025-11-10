@@ -47,13 +47,13 @@ class MeanVarianceOptimizer:
         mu = expected_returns.mean_historical_return(historical_returns)
         S = risk_models.sample_cov(historical_returns)
         
-        # Create efficient frontier
-        ef = EfficientFrontier(mu, S)
-        
-        # Apply constraints
+        # Get bounds for all assets
         bounds = self.constraints.get_weight_bounds(symbols)
-        ef.add_constraint(lambda w: w[symbols.index("BTC")] >= self.constraints.BTC_MIN_WEIGHT)
-        ef.add_constraint(lambda w: w[symbols.index("BTC")] <= self.constraints.BTC_MAX_WEIGHT)
+        
+        # Create efficient frontier with bounds
+        ef = EfficientFrontier(mu, S, weight_bounds=bounds)
+        
+        # Note: Bounds enforce 50-60% for BTC and 0-20% for other assets
         
         # Optimize based on method
         if method == "max_sharpe":
@@ -72,8 +72,12 @@ class MeanVarianceOptimizer:
         # Clean weights (remove near-zero allocations)
         cleaned_weights = ef.clean_weights()
         
-        # Convert to dictionary
-        weights_dict = {symbol: cleaned_weights[i] for i, symbol in enumerate(symbols)}
+        # Convert to dictionary - clean_weights() returns a dict already
+        if isinstance(cleaned_weights, dict):
+            weights_dict = cleaned_weights
+        else:
+            # Fallback: if it's an array/list, convert to dict
+            weights_dict = {symbol: cleaned_weights[i] for i, symbol in enumerate(symbols)}
         
         # Calculate portfolio metrics
         performance = ef.portfolio_performance(verbose=False, risk_free_rate=risk_free_rate)

@@ -4,7 +4,7 @@
 **Status**: Phase 1 - Foundation (Complete)  
 **Version**: 0.1.0  
 **Location**: `repo/portfolio/`  
-**Port**: TBD (Future API service)
+**Port**: 8012
 
 ---
 

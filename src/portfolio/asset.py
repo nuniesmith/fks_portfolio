@@ -57,12 +57,15 @@ class StockAsset(BaseAsset):
     pe_ratio: Optional[float] = None
     
     def __init__(self, symbol: str, sector: Optional[str] = None, **kwargs):
+        # Remove sector from kwargs to avoid passing it twice
+        kwargs.pop('sector', None)
         super().__init__(
             symbol=symbol,
             asset_type=AssetType.STOCK,
-            sector=sector,
             **kwargs
         )
+        # Set sector after initialization
+        self.sector = sector
 
 
 @dataclass

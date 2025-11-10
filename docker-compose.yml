@@ -4,6 +4,8 @@ services:
   portfolio:
     build: .
     container_name: fks_portfolio
+    ports:
+      - "8012:8012"
     volumes:
       - ./src:/app/src
       - ./data:/app/data
@@ -11,5 +13,12 @@ services:
     environment:
       - LOG_LEVEL=INFO
       - DATA_DIR=/app/data
-    command: python src/cli.py --help
+      - PORT=8012
+    command: uvicorn src.api.server:app --host 0.0.0.0 --port 8012
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import requests; requests.get('http://localhost:8012/health').raise_for_status()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 

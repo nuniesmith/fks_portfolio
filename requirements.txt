@@ -27,6 +27,15 @@ pytest-cov>=4.1.0
 
 # Data Sources (free tiers)
 yfinance>=0.2.28
+requests>=2.31.0
+
+# API Framework (Phase 2)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# AI Integration (Phase 5)
+httpx>=0.25.0
 
 # Optional: For advanced backtesting
 # backtrader>=1.9.78.123
