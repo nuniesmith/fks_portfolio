@@ -21,6 +21,7 @@ from .signal_routes import router as signal_router
 from .guidance_routes import router as guidance_router
 from .ai_routes import router as ai_router
 from .dashboard_routes import router as dashboard_router
+from .allocation_routes import router as allocation_router
 
 
 # Pydantic models for request/response
@@ -78,6 +79,7 @@ def create_app() -> FastAPI:
     app.include_router(guidance_router)
     app.include_router(ai_router)
     app.include_router(dashboard_router)
+    app.include_router(allocation_router)
     
     # Initialize services
     data_manager = DataManager()
