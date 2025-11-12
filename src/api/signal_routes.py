@@ -2,6 +2,7 @@
 Signal generation API routes
 """
 import json
+import os
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException
@@ -15,16 +16,14 @@ from ..signals.trading_signal import TradingSignal
 from ..data.manager import DataManager
 from ..data.asset_config import AssetConfigManager
 
-# Import lot size calculator (will need to be added to portfolio or shared)
-# For now, we'll add basic lot size calculation here
+# Import lot size calculator from local utils
 try:
-    import sys
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "main" / "assets"))
-    from signal_utils import SignalLotSizeCalculator, EntryPriceManager
+    from ..utils.signal_utils import SignalLotSizeCalculator, EntryPriceManager
+    from ..utils.registry import AssetCategory
     LOT_SIZE_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     LOT_SIZE_AVAILABLE = False
-    logger.warning("Lot size calculator not available - install from main/assets")
+    logger.warning(f"Lot size calculator not available: {e}")
 
 
 router = APIRouter(prefix="/api/signals", tags=["signals"])
@@ -131,7 +130,13 @@ async def get_signals_from_files(
         if date is None:
             date = datetime.now().strftime("%Y%m%d")
         
-        signals_dir = Path("/home/jordan/Nextcloud/code/repos/fks/signals")
+        # Use environment variable or fallback to default path
+        # In Docker, this will be /app/signals (mounted volume)
+        # Locally, it will be the absolute path
+        signals_dir = Path(os.getenv(
+            "SIGNALS_DIR",
+            "/app/signals" if os.path.exists("/app/signals") else "/home/jordan/Nextcloud/code/repos/fks/signals"
+        ))
         signals = {}
         
         # Load category-specific files
@@ -165,17 +170,17 @@ async def get_signals_from_files(
                         
                         if entry_manager:
                             # Add entry planning
-                            from ..signals.trade_categories import TradeCategory as TC
-                            cat_map = {"scalp": TC.SCALP, "swing": TC.SWING, "long_term": TC.LONG_TERM}
-                            asset_cat = TC.get_asset_category(cat_map.get(cat, TC.SWING)) if hasattr(TC, 'get_asset_category') else None
+                            # Determine asset category from symbol
+                            from ..utils.registry import get_asset, AssetCategory
+                            asset = get_asset(signal.get("symbol", ""))
+                            asset_cat = asset.category if asset else AssetCategory.CRYPTO  # Default to crypto
                             
-                            if asset_cat:
-                                entry_info = entry_manager.calculate_entry_price_for_next_day(
-                                    current_price=signal.get("entry_price", 0),
-                                    signal=signal,
-                                    asset_category=asset_cat
-                                )
-                                signal["entry_planning"] = entry_info
+                            entry_info = entry_manager.calculate_entry_price_for_next_day(
+                                current_price=signal.get("entry_price", 0),
+                                signal=signal,
+                                asset_category=asset_cat
+                            )
+                            signal["entry_planning"] = entry_info
                     except Exception as e:
                         logger.warning(f"Error calculating lot size for signal: {e}")
         
