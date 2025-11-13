@@ -1,6 +1,9 @@
 services:
   portfolio:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nuniesmith/fks:portfolio-latest
     container_name: fks_portfolio
     ports:
       - "8012:8012"
