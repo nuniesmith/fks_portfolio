@@ -11,7 +11,7 @@ services:
       - ./src:/app/src
       - ./data:/app/data
       - ./notebooks:/app/notebooks
-      - /home/jordan/Nextcloud/code/repos/fks/signals:/app/signals:ro
+      - signals-data:/app/signals:ro
     environment:
       - LOG_LEVEL=INFO
       - DATA_DIR=/app/data
@@ -28,3 +28,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+volumes:
+  signals-data:
+    driver: local
