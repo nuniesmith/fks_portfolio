@@ -9,6 +9,10 @@ scipy>=1.10.0
 # Portfolio Optimization
 PyPortfolioOpt>=1.5.4
 
+# Statistical Analysis & Performance Reporting
+statsmodels>=0.14.0  # Regression analysis, factor models, time series
+pyfolio-reloaded>=0.9.0  # Performance tear sheets and portfolio analysis
+
 # Technical Analysis
 TA-Lib>=0.4.28
 

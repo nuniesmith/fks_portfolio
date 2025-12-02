@@ -10,20 +10,36 @@ from loguru import logger
 from .cvar import CVaRCalculator, calculate_max_drawdown, calculate_sharpe_ratio
 from .bias_detection import BiasDetector, BiasType
 
+# Optional factor analysis
+try:
+    from .factor_analysis import FactorAnalyzer
+    FACTOR_ANALYSIS_AVAILABLE = True
+except ImportError:
+    FACTOR_ANALYSIS_AVAILABLE = False
+    FactorAnalyzer = None
+
 
 class RiskReportGenerator:
     """Generate comprehensive risk reports"""
     
-    def __init__(self, confidence_level: float = 0.95):
+    def __init__(self, confidence_level: float = 0.95, risk_free_rate: float = 0.02):
         """
         Initialize risk report generator
         
         Args:
             confidence_level: Confidence level for CVaR (default 95%)
+            risk_free_rate: Risk-free rate for factor analysis (default 2%)
         """
         self.cvar_calc = CVaRCalculator(confidence_level=confidence_level)
         self.bias_detector = BiasDetector()
+        self.risk_free_rate = risk_free_rate
         self.logger = logger
+        
+        # Initialize factor analyzer if available
+        if FACTOR_ANALYSIS_AVAILABLE:
+            self.factor_analyzer = FactorAnalyzer(risk_free_rate=risk_free_rate)
+        else:
+            self.factor_analyzer = None
     
     def generate_report(
         self,
@@ -32,7 +48,9 @@ class RiskReportGenerator:
         recent_wins: int = 0,
         win_rate: float = 0.0,
         current_allocations: Optional[Dict[str, float]] = None,
-        risk_free_rate: float = 0.02
+        risk_free_rate: float = 0.02,
+        factor_returns: Optional[pd.DataFrame] = None,
+        include_factor_analysis: bool = False,
     ) -> Dict:
         """
         Generate comprehensive risk report
@@ -44,6 +62,8 @@ class RiskReportGenerator:
             win_rate: Overall win rate
             current_allocations: Current portfolio allocations
             risk_free_rate: Risk-free rate for Sharpe ratio
+            factor_returns: Optional DataFrame with factor returns for factor analysis
+            include_factor_analysis: Whether to include factor analysis in report
         
         Returns:
             Dictionary with risk metrics and recommendations
@@ -111,6 +131,43 @@ class RiskReportGenerator:
                 "sharpe_minimum": 0.5
             }
         }
+        
+        # Add factor analysis if requested and available
+        if include_factor_analysis and factor_returns is not None and self.factor_analyzer is not None:
+            try:
+                factor_analysis = self.factor_analyzer.analyze_factor_exposure(
+                    portfolio_returns=portfolio_returns,
+                    factor_returns=factor_returns,
+                    risk_free_rate=risk_free_rate,
+                )
+                
+                # Add simplified factor analysis to report
+                report["factor_analysis"] = {
+                    "alpha": {
+                        "annualized_pct": factor_analysis["alpha"]["alpha_annualized"],
+                        "significant": factor_analysis["alpha"]["significant"],
+                    },
+                    "factor_exposures": {
+                        factor: {
+                            "beta": exposure["beta"],
+                            "significant": exposure["significant"],
+                        }
+                        for factor, exposure in factor_analysis["factor_exposures"].items()
+                    },
+                    "model_fit": {
+                        "r_squared": factor_analysis["model_fit"]["r_squared"],
+                        "adjusted_r_squared": factor_analysis["model_fit"]["adjusted_r_squared"],
+                    },
+                }
+                
+                self.logger.info(
+                    f"Factor analysis added to report: "
+                    f"α={factor_analysis['alpha']['alpha_annualized']:.2f}%, "
+                    f"R²={factor_analysis['model_fit']['r_squared']:.3f}"
+                )
+                
+            except Exception as e:
+                self.logger.warning(f"Error adding factor analysis to report: {e}")
         
         return report
     

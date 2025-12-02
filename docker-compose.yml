@@ -2,9 +2,9 @@ services:
   portfolio:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     image: nuniesmith/fks:portfolio-latest
-    container_name: fks_portfolio
+    container_name: fks-portfolio
     ports:
       - "8012:8012"
     volumes:
