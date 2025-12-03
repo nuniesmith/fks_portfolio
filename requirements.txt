@@ -6,6 +6,9 @@ pandas>=2.0.0
 numpy>=1.24.0
 scipy>=1.10.0
 
+# Metrics
+prometheus_client>=0.19.0
+
 # Portfolio Optimization
 PyPortfolioOpt>=1.5.4
 
